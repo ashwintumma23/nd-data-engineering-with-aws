@@ -20,7 +20,11 @@ default_args = {
     'email_on_retry': False
 }
 
-S3_BUCKET = "ashwin-udacity-sparkify-project"
+# Temporary Bucket for subset of data 
+#S3_BUCKET = "ashwin-udacity-sparkify-project"
+
+# Use udacity's bucket for complete data
+S3_BUCKET = "udacity-dend"
 
 @dag(
     default_args=default_args,
@@ -38,8 +42,7 @@ def final_project():
         task_id='Stage_events',
         table='staging_events',
         s3_bucket=S3_BUCKET,
-        s3_key='log-data',
-        log_json_file='s3:// ' + S3_BUCKET + '/log_json_path.json'
+        s3_key='log-data'
     )
 
     # Use Subset of SongData as the entire direcotory is not able to loaded in CloudShell and S3 Bucket because of its size.
@@ -47,7 +50,7 @@ def final_project():
         task_id='Stage_songs',
         table='staging_songs',
         s3_bucket=S3_BUCKET,
-        s3_key='song-data/A/A/'
+        s3_key='song-data'
     )
 
     load_songplays_table = LoadFactOperator(
@@ -77,6 +80,7 @@ def final_project():
 
     run_quality_checks = DataQualityOperator(
         task_id='Run_data_quality_checks',
+        tables = ["songplays", "users", "songs", "artists", "time"]
     )
 
     end_operator = DummyOperator(task_id='End_execution')

@@ -11,7 +11,9 @@ class StageToRedshiftOperator(BaseOperator):
         FROM '{}' 
         ACCESS_KEY_ID '{}'
         SECRET_ACCESS_KEY '{}'
-        FORMAT AS json '{}';
+        REGION AS '{}'
+        JSON '{}'
+        ;
     """
     
     @apply_defaults
@@ -21,7 +23,7 @@ class StageToRedshiftOperator(BaseOperator):
                 table="",
                 s3_bucket="",
                 s3_key="",
-                log_json_file="",
+                log_json_file="auto",
                 *args, **kwargs):
         """ Initialize the RedShift Operator with default arguments for redshift and aws_credentials connections """
 
@@ -46,23 +48,15 @@ class StageToRedshiftOperator(BaseOperator):
 
         self.log.info("Copying data from S3 to Redshift Table")
         rendered_key = self.s3_key.format(**context)
-        s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
+        s3_location = "s3://{}/{}".format(self.s3_bucket, rendered_key)
 
-
-        if self.log_json_file is not None and self.log_json_file != "":
-            copy_sql_formatted = StageToRedshiftOperator.COPY_SQL.format(
-                self.table,
-                s3_path,
-                aws_creds.login,
-                aws_creds.password,
-                self.log_json_file)
-        else:
-            copy_sql_formatted = StageToRedshiftOperator.COPY_SQL.format(
-                self.table,
-                s3_path,
-                aws_creds.login,
-                aws_creds.password,
-                'auto')
+        copy_sql_formatted = StageToRedshiftOperator.COPY_SQL.format(
+            self.table,
+            s3_location,
+            aws_creds.login,
+            aws_creds.password,
+            'us-west-2',
+            'auto')
 
         self.log.info(f"Start RedShift Copy operation {self.table}")
         redshift.run(copy_sql_formatted)
