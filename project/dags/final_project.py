@@ -21,10 +21,10 @@ default_args = {
 }
 
 # Temporary Bucket for subset of data 
-#S3_BUCKET = "ashwin-udacity-sparkify-project"
+#S3_BUCKET = 'ashwin-udacity-sparkify-project'
 
 # Use udacity's bucket for complete data
-S3_BUCKET = "udacity-dend"
+S3_BUCKET = 'udacity-dend'
 
 @dag(
     default_args=default_args,
@@ -42,14 +42,15 @@ def final_project():
         task_id='Stage_events',
         table='staging_events',
         s3_bucket=S3_BUCKET,
-        s3_key='log-data'
+        s3_key='log-data',
+        log_json_file='s3:// ' + S3_BUCKET + '/log_json_path.json'
     )
 
     # Use Subset of SongData as the entire direcotory is not able to loaded in CloudShell and S3 Bucket because of its size.
     stage_songs_to_redshift = StageToRedshiftOperator(
         task_id='Stage_songs',
         table='staging_songs',
-        s3_bucket=S3_BUCKET,
+        s3_bucket='ashwin-udacity-sparkify-project',
         s3_key='song-data'
     )
 
@@ -60,27 +61,35 @@ def final_project():
 
     load_user_dimension_table = LoadDimensionOperator(
         task_id='Load_user_dim_table',
-        sql_query=SqlQueries.user_table_insert
+        table='users',
+        sql_query=SqlQueries.user_table_insert,
+        mode='delete-load'
     )
 
     load_song_dimension_table = LoadDimensionOperator(
         task_id='Load_song_dim_table',
-        sql_query=SqlQueries.song_table_insert
+        table='songs',
+        sql_query=SqlQueries.song_table_insert,
+        mode='delete-load'
     )
 
     load_artist_dimension_table = LoadDimensionOperator(
         task_id='Load_artist_dim_table',
-        sql_query=SqlQueries.artist_table_insert
+        table='artists',
+        sql_query=SqlQueries.artist_table_insert,
+        mode='delete-load'
     )
 
     load_time_dimension_table = LoadDimensionOperator(
         task_id='Load_time_dim_table',
-        sql_query=SqlQueries.time_table_insert
+        table='time',
+        sql_query=SqlQueries.time_table_insert,
+        mode='delete-load'
     )
 
     run_quality_checks = DataQualityOperator(
         task_id='Run_data_quality_checks',
-        tables = ["songplays", "users", "songs", "artists", "time"]
+        tables = ['songplays', 'users', 'songs', 'artists', 'time']
     )
 
     end_operator = DummyOperator(task_id='End_execution')
