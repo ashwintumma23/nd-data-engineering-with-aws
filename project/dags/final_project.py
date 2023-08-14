@@ -46,7 +46,6 @@ def final_project():
         log_json_file='s3:// ' + S3_BUCKET + '/log_json_path.json'
     )
 
-    # Use Subset of SongData as the entire direcotory is not able to loaded in CloudShell and S3 Bucket because of its size.
     stage_songs_to_redshift = StageToRedshiftOperator(
         task_id='Stage_songs',
         table='staging_songs',
